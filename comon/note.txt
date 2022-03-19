@@ -1,0 +1,8 @@
+git add .
+
+git commit -m 'Commit Date'
+
+git push
+
+
+git pull
