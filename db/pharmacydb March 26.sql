@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 19, 2022 at 10:09 AM
+-- Generation Time: Mar 26, 2022 at 01:52 PM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 8.1.1
 
@@ -61,6 +61,12 @@ UPDATE `customers` SET `name`=_name,`mobile`=_mobile,`gender`=_gender,`address`=
 SELECT 'updated' AS Message;
 
 END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `employee_fill_sp` ()  BEGIN
+
+SELECT `emp_id`, `name`, `title` FROM `employee` WHERE `status` = 'Active';
+
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `emplyee_delete_sp` (IN `_emp_id` INT)  BEGIN
@@ -365,7 +371,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `user_read_sp` (IN `_user_id` VARCHA
 
 IF _user_id = '' THEN
 
-SELECT `user_id`ID, `username` Username, `password` Password, e.name Employee, u.`status` 'Status', u.`register_date` 'Date', u.`system_date` 'System Date' FROM `user` u
+SELECT `user_id`ID, `username` Username, ifnull(e.name,'Default User') Employee, u.`status` 'Status', u.`register_date` 'Date' FROM `user` u
 LEFT JOIN employee e ON e.emp_id = u.emp_id;
 
 ELSE
@@ -404,14 +410,14 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `user_sp` (IN `_user_id` VARCHAR(20)
  
  IF _action = 'Insert' THEN
 
-INSERT INTO `user`(`user_id`, `username`, `password`, `emp_id`, `status`, `register_date`) VALUES (generate_user_id(), _username, PASSWORD(_password), _emp_id, _status, _register_date);
+INSERT INTO `user`(`user_id`, `username`, `password`, `emp_id`, `status`, `register_date`) VALUES (generate_user_id(), _username, PASSWORD(_password), if(_emp_id='',NULL,_emp_id), _status, _register_date);
 
 SELECT 'inserted' AS Message;
 END IF;
 
 IF _action = 'Update' THEN
 
-UPDATE `user` SET `username`=_username,`password`=PASSWORD(_password),`emp_id`=_emp_id,`status`=_status,`register_date`=_register_date WHERE `user_id`=_user_id;
+UPDATE `user` SET `username`=_username,`password`=PASSWORD(_password),`emp_id`=if(_emp_id='',NULL,_emp_id),`status`=_status,`register_date`=_register_date WHERE `user_id`=_user_id;
 
 SELECT 'updated' as Message;
 
@@ -715,7 +721,7 @@ CREATE TABLE `user` (
   `user_id` varchar(20) NOT NULL,
   `username` varchar(100) NOT NULL,
   `password` varchar(100) NOT NULL,
-  `emp_id` int(11) NOT NULL,
+  `emp_id` int(11) DEFAULT NULL,
   `status` varchar(50) NOT NULL,
   `register_date` date NOT NULL,
   `system_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -727,7 +733,10 @@ CREATE TABLE `user` (
 
 INSERT INTO `user` (`user_id`, `username`, `password`, `emp_id`, `status`, `register_date`, `system_date`) VALUES
 ('USR001', 'admin', '*23AE809DDACAF96AF0FD78ED04B6A265E05AA257', 2, 'Active', '2022-03-12', '2022-03-12 09:18:15'),
-('USR002', 'pharmacy', '*23AE809DDACAF96AF0FD78ED04B6A265E05AA257', 4, 'Active', '2022-03-19', '2022-03-19 07:46:29');
+('USR002', 'super admin', '*23AE809DDACAF96AF0FD78ED04B6A265E05AA257', NULL, 'Active', '2022-03-26', '2022-03-26 09:02:53'),
+('USR003', 'abdi ali', '*23AE809DDACAF96AF0FD78ED04B6A265E05AA257', NULL, 'InActive', '2022-03-26', '2022-03-26 09:15:48'),
+('USR004', 'abdi Mire', '*23AE809DDACAF96AF0FD78ED04B6A265E05AA257', NULL, 'Active', '2022-03-26', '2022-03-26 09:19:40'),
+('USR005', 'ibrah', '*23AE809DDACAF96AF0FD78ED04B6A265E05AA257', 4, 'Active', '2022-03-26', '2022-03-26 09:34:28');
 
 -- --------------------------------------------------------
 
@@ -863,7 +872,7 @@ ALTER TABLE `medicine_stock`
 -- AUTO_INCREMENT for table `menus`
 --
 ALTER TABLE `menus`
-  MODIFY `menu_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `menu_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `purchases`
