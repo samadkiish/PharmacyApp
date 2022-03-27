@@ -10,16 +10,16 @@ function insert_update($conn)
     // $userId = $_SESSION['user_id'];
     $data = [];
 
-    $query = "CALL 	menu_sp('$menu_id','$name','$link','$module','$date','USR000','$action_sp')";
+    $query = "CALL 	customer_sp('$customer_id','$name','$mobile','$gender','$address','$date','USR001','$action_sp')";
     $result = $conn->query($query);
 
     if ($result) {
         $Message = $result->fetch_assoc();
         $data = array();
         if ($Message['Message'] == 'inserted') {
-            $data = array('status' => true, 'message' => 'New Menus has been saved successfully');
+            $data = array('status' => true, 'message' => 'New Customer has been saved successfully');
         }elseif ($Message['Message'] == 'updated') {
-            $data = array('status' => true, 'message' => 'Menus has been saved successfully');
+            $data = array('status' => true, 'message' => 'Customer has been saved successfully');
         }
     } else {
         $data = array('status' => false, 'message' => $conn->error);
@@ -31,7 +31,7 @@ function insert_update($conn)
 
 function read($conn) {
     extract($_POST);
-    $query = "CALL `menu_read_sp`('$menu_id')";
+    $query = "CALL `customer_read_sp`('$customer_id')";
     $result = $conn->query($query);
     $result_data = array();
     if ($result) {
@@ -57,14 +57,14 @@ function read($conn) {
 
 function delete($conn) {
     extract($_POST);
-    $query = "CALL `menu_delete_sp`('$menu_id')";
+    $query = "CALL `customer_delete_sp`('$customer_id')";
     $result = $conn->query($query);
     $result_data = array();
 
     if ($result) {
         $row = $result->fetch_assoc();
         if ($row['Message'] == 'success') {
-            $result_data = array("status" => true, "message" => "Menu has been deleted successfully");
+            $result_data = array("status" => true, "message" => "Customer has been deleted successfully");
         }
     }
     else {
@@ -74,31 +74,7 @@ function delete($conn) {
     echo json_encode($result_data);
 }
 
-function load_nav($conn) {
-    extract($_POST);
-    $userId = 'USR001';
-    $query = "CALL `load_nav_user_ps`('$userId')";
-    $result = $conn->query($query);
-    $result_data = array();
-    if ($result) {
-        $num_rows = $result->num_rows;
-        if ($num_rows > 0) {
-            $data = [];
-            while ($row = $result->fetch_assoc()) {
-                $data[] = $row;
-            }
-            $result_data = array("status" => true, "message" => $data);
-        }
-        else {
-            $result_data = array("status" => false, "message" => "Data Not Found");
-        }
-    }
-    else {
-        $result_data = array("status" => false, "message" => $conn->error);
-    }
 
-    echo json_encode($result_data);
-}
 
 if (isset($action)) {
     $action($conn);

@@ -1,4 +1,5 @@
 <?php
+session_start();
 header("Content-Type: application/json");
 include("../comon/database.php");
 $action = $_POST['action'];
@@ -18,7 +19,7 @@ function login($conn)
         $row = $result->fetch_assoc();
         if (isset($row['Message']) && $row['Message'] == 'Denied') {
             $result_data = array("status" => false, "message" => "Username or Password is incorrect");
-        } elseif (isset($row['Message']) && $row['Message'] == 'inactive') {
+        } elseif (isset($row['Message']) && $row['Message'] == 'inActive') {
             $result_data = array("status" => false, "message" => "Your Username is Locked By Administrator");
         } else {
             $data[] = $row;

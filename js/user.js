@@ -78,7 +78,7 @@ $(document).ready(function(){
                         btn_action = 'insert';
                     $("#form")[0].reset();
                     modalPopup.modal("hide");
-                    $(".alert").removeClass("alert-danger");
+                        $(".alert").removeClass("alert-danger");
                         $(".alert").addClass("alert-success");
                         $(".alert .message").html(message);
                         $(".alert").show();
@@ -320,4 +320,6 @@ $(document).ready(function(){
 
 
     }
+
+
 });

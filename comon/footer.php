@@ -24,6 +24,23 @@
     <script src="../assets/js/gleek.js"></script>
     <script src="../assets/js/styleSwitcher.js"></script>
 
+
+    <script>
+        function showAlert(type, message){
+
+            if(type == 'success'){
+                $(".alert").removeClass("alert-danger");
+                $(".alert").addClass("alert-success");
+            }else{
+                $(".alert").removeClass("alert-success");
+                $(".alert").addClass("alert-danger");
+            }
+
+            $(".alert .message").html(message);
+            $(".alert").show();
+            }
+    </script>
+
 </body>
 
 
