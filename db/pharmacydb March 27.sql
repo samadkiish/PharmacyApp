@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 26, 2022 at 01:52 PM
+-- Generation Time: Mar 27, 2022 at 06:09 PM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 8.1.1
 
@@ -36,7 +36,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `customer_read_sp` (IN `_id` INT)  B
 
 IF _id = '' THEN
 
-SELECT `customer_id` ID, `name` 'customer', `mobile` Mobile,`gender` Gender, `address` Address, `register_date` 'Date' FROM `customers` WHERE 1;
+SELECT `customer_id` ID, `name` 'Customer', `mobile` Mobile,`gender` Gender, `address` Address, `register_date` 'Date' FROM `customers` WHERE 1;
 
 ELSE 
 
@@ -148,6 +148,47 @@ UPDATE `expense` SET `type`=_type,`description`=_description,`amount`=_amount,`r
 
 SELECT 'updated' AS Message;
 END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `fill_user_sp` ()  BEGIN
+
+SELECT `user_id`, `username`, ifnull(e.name,'Default User') employee FROM `user` u
+LEFT JOIN employee e ON e.emp_id = u.`emp_id`;
+
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `load_nav_user_ps` (IN `_user` VARCHAR(20))  BEGIN
+
+
+SELECT m.module, m.name menu, m.link
+
+FROM `user_rolls` ur
+LEFT JOIN menus m ON m.menu_id = ur.menu_id
+WHERE ur.user_id = _user ORDER BY m.module;
+
+
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `login_sp` (IN `_user` VARCHAR(20), IN `_password` VARCHAR(100))  BEGIN
+
+IF EXISTS (SELECT `user_id` FROM `user` WHERE `username` = _user AND `password` = PASSWORD(_password)) THEN
+
+	IF EXISTS(SELECT `user_id` FROM `user` WHERE `username` = _user AND `password` = PASSWORD(_password) AND status = 'Active') THEN
+    
+    	SELECT `user_id`, `username`,  e.name, e.title FROM `user` u
+LEFT JOIN employee e ON e.emp_id = u.`emp_id` WHERE `username` = _user AND `password` = PASSWORD(_password);
+
+    ELSE
+    	SELECT 'inActive' AS Message;
+    END IF;
+
+ELSE
+
+SELECT 'Denied' AS Message;
+
+END IF;
+
+
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `medicine_stock_delete_sp` (IN `_id` INT)  BEGIN
@@ -367,6 +408,13 @@ SELECT 'success' as Message;
 
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `user_menu_get` ()  BEGIN
+
+SELECT m.menu_id, m.module, m.name as menu FROM menus m
+ORDER BY m.module;
+
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `user_read_sp` (IN `_user_id` VARCHAR(20))  BEGIN
 
 IF _user_id = '' THEN
@@ -379,6 +427,12 @@ ELSE
 SELECT * FROM `user` WHERE user_id = _user_id;
 
 END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `user_rolls_get_sp` (IN `_user` VARCHAR(20))  BEGIN
+
+SELECT `user_id`, `menu_id` FROM `user_rolls` WHERE `user_id` = _user;
+
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `user_rolls_read_sp` (IN `_id` INT)  BEGIN
@@ -397,9 +451,11 @@ END IF;
 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `user_rolls_sp` (IN `_user` VARCHAR(20), IN `_menu` INT)  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `user_rolls_sp` (IN `_user` VARCHAR(20), IN `_menu` INT, IN `_loop` INT)  BEGIN
 
+IF _loop = 0 THEN
 DELETE FROM user_rolls WHERE user_rolls.user_id = _user;
+END IF;
 
 INSERT INTO `user_rolls`(`user_id`, `menu_id`, `register_date`) VALUES (_user, _menu, curdate());
 
@@ -477,7 +533,8 @@ CREATE TABLE `customers` (
 --
 
 INSERT INTO `customers` (`customer_id`, `name`, `mobile`, `gender`, `address`, `user_id`, `register_date`, `system_date`) VALUES
-(1, 'Ibrahim', 62348772, 'Male', 'Hodan', 'USR001', '2022-03-13', '2022-03-13 08:30:40');
+(1, 'Ibrahim Mohamoud', 2147483647, 'Male', 'Hodan', 'USR001', '2022-03-13', '2022-03-13 08:30:40'),
+(3, 'Hashi Abdi', 61232434, 'Male', 'Hodan', 'USR001', '2022-03-26', '2022-03-27 07:17:54');
 
 -- --------------------------------------------------------
 
@@ -527,7 +584,7 @@ CREATE TABLE `expense` (
 --
 
 INSERT INTO `expense` (`id`, `type`, `description`, `amount`, `register_date`, `user_id`, `system_date`) VALUES
-(1, 'Rent Expense', 'Kirada Guriga', 100.00, '2022-03-12', 'USR001', '2022-03-13 09:32:47');
+(1, 'Rent Expenses', 'Kirada Guriga Ee Febuary', 100.50, '2022-03-23', 'USR001', '2022-03-13 09:32:47');
 
 -- --------------------------------------------------------
 
@@ -579,7 +636,9 @@ CREATE TABLE `menus` (
 
 INSERT INTO `menus` (`menu_id`, `name`, `link`, `module`, `user_id`, `register_date`, `system_date`) VALUES
 (1, 'Dashboard', 'dashboard.php', 'Admin', 'USR001', '2022-03-13', '2022-03-13 07:31:00'),
-(2, 'Employee', 'employee.php', 'Staff', 'USR001', '2022-03-13', '2022-03-13 07:44:12');
+(2, 'Employee', 'employee.php', 'Staff', 'USR001', '2022-03-13', '2022-03-13 07:44:12'),
+(4, 'Pharmacy', 'pharmacy.php', 'Medicine', 'USR000', '2022-03-27', '2022-03-27 08:42:37'),
+(5, 'Pharmacy Sales', 'pharmacy_sales.php', 'Medicine', 'USR000', '2022-03-29', '2022-03-27 08:43:03');
 
 -- --------------------------------------------------------
 
@@ -709,7 +768,9 @@ CREATE TABLE `suppliers` (
 --
 
 INSERT INTO `suppliers` (`supplier_id`, `name`, `mobile`, `address`, `user_id`, `register_date`, `system_date`) VALUES
-(1, 'Mohamed Ahmed Ali', 612324336, 'Derkenley', 'USR001', '2022-03-12', '2022-03-12 08:40:26');
+(1, 'Mohamed Ahmed Ali', 612324336, 'Derkenley', 'USR001', '2022-03-12', '2022-03-12 08:40:26'),
+(3, 'Harun Mohamed', 89623434, 'Hodan', 'USR001', '2022-03-27', '2022-03-27 07:30:43'),
+(8, 'Hashi Abdi Mohamed', 234343, 'Hodan', 'USR001', '2022-03-27', '2022-03-27 07:35:35');
 
 -- --------------------------------------------------------
 
@@ -756,7 +817,11 @@ CREATE TABLE `user_rolls` (
 --
 
 INSERT INTO `user_rolls` (`id`, `user_id`, `menu_id`, `register_date`) VALUES
-(1, 'USR001', 1, '2022-03-13');
+(1, 'USR001', 1, '2022-03-13'),
+(2, 'USR001', 2, '2022-03-13'),
+(8, 'USR003', 4, '2022-03-27'),
+(9, 'USR003', 5, '2022-03-27'),
+(10, 'USR003', 2, '2022-03-27');
 
 --
 -- Indexes for dumped tables
@@ -848,7 +913,7 @@ ALTER TABLE `user_rolls`
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `employee`
@@ -860,7 +925,7 @@ ALTER TABLE `employee`
 -- AUTO_INCREMENT for table `expense`
 --
 ALTER TABLE `expense`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `medicine_stock`
@@ -872,7 +937,7 @@ ALTER TABLE `medicine_stock`
 -- AUTO_INCREMENT for table `menus`
 --
 ALTER TABLE `menus`
-  MODIFY `menu_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `menu_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `purchases`
@@ -890,13 +955,13 @@ ALTER TABLE `sales`
 -- AUTO_INCREMENT for table `suppliers`
 --
 ALTER TABLE `suppliers`
-  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `supplier_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `user_rolls`
 --
 ALTER TABLE `user_rolls`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- Constraints for dumped tables
