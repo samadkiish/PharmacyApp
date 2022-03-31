@@ -1,6 +1,6 @@
 <?php
 include "constant.php";
-// session_start();
+session_start();
 
 // Create connection
 $conn = new mysqli(SERVER_NAME,USERNAME,PASSWORD,DATABASE);

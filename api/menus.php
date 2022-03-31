@@ -76,7 +76,7 @@ function delete($conn) {
 
 function load_nav($conn) {
     extract($_POST);
-    $userId = 'USR001';
+    $userId = $_SESSION['user_id'];
     $query = "CALL `load_nav_user_ps`('$userId')";
     $result = $conn->query($query);
     $result_data = array();

@@ -1,5 +1,4 @@
 <?php
-session_start();
 header("Content-Type: application/json");
 include("../comon/database.php");
 $action = $_POST['action'];

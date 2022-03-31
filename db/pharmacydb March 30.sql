@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 27, 2022 at 06:09 PM
+-- Generation Time: Mar 31, 2022 at 07:05 AM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 8.1.1
 
@@ -30,6 +30,16 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `customer_delete_sp` (IN `_id` INT) 
 DELETE FROM `customers` WHERE `customer_id` = _id;
 
 SELECT 'success' AS Message;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `customer_fill_sp` ()  BEGIN
+
+
+
+SELECT customer_id, name, mobile FROM `customers`;
+
+
+
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `customer_read_sp` (IN `_id` INT)  BEGIN
@@ -157,6 +167,19 @@ LEFT JOIN employee e ON e.emp_id = u.`emp_id`;
 
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `get_daily_statis_sp` ()  BEGIN
+
+SET @customers = (SELECT COUNT(*) FROM `customers`);
+SET @suppliers = (SELECT COUNT(*) FROM `suppliers`);
+SET @onStock = (SELECT SUM(`quantity`) FROM `medicine_stock`);
+SET @income = (SELECT SUM(`quantity`) FROM `sales`);
+SET @cost = (SELECT SUM(`cost`) FROM `purchases`);
+SET @expense = (SELECT SUM(`amount`) FROM `expense`);
+
+SELECT @customers customers, @suppliers suppliers, @onStock onStock, @income income,@cost cost, @expense expense;
+
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `load_nav_user_ps` (IN `_user` VARCHAR(20))  BEGIN
 
 
@@ -198,6 +221,20 @@ DELETE FROM `medicine_stock` WHERE `medicine_id` = _id;
 SELECT 'success' AS Message;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `medicine_stock_fill_sp` (IN `_key` VARCHAR(20))  BEGIN
+
+IF _key = 'Purchase' THEN
+
+SELECT `medicine_id`, name, type, quantity, price FROM `medicine_stock`;
+
+ELSEIF _key = 'Sale' THEN
+
+SELECT `medicine_id`, name, type, quantity, price FROM `medicine_stock` WHERE quantity != 0;
+
+END IF;
+
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `medicine_stock_read_sp` (IN `_medicine_id` INT)  BEGIN
 
 
@@ -213,17 +250,17 @@ END IF;
 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `medicine_stock_sp` (IN `_medicine_id` INT, IN `_name` VARCHAR(100), IN `_type` VARCHAR(100), IN `_company` VARCHAR(100), IN `_quantity` INT, IN `_cost` FLOAT(10,2), IN `_price` FLOAT(10,2), IN `_status` VARCHAR(50), IN `_expire_date` DATE, IN `_register_date` DATE, IN `_user_id` VARCHAR(20), IN `_action` VARCHAR(20))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `medicine_stock_sp` (IN `_medicine_id` INT, IN `_name` VARCHAR(100), IN `_type` VARCHAR(100), IN `_company` VARCHAR(100), IN `_quantity` FLOAT(10,2), IN `_cost` FLOAT(10,2), IN `_price` FLOAT(10,2), IN `_expire_date` DATE, IN `_register_date` DATE, IN `_user_id` VARCHAR(20), IN `_action` VARCHAR(20))  BEGIN
 
 IF _action = 'Insert' THEN
 
-INSERT INTO `medicine_stock`(`name`, `type`, `company`, `quantity`, `cost`, `price`, `status`, `expire_date`,`user_id`, `register_date`) VALUES (_name ,_type ,_company ,_quantity ,_cost ,_price ,_status , _expire_date,_user_id ,_register_date);
+INSERT INTO `medicine_stock`(`name`, `type`, `company`, `quantity`, `cost`, `price`, `expire_date`,`user_id`, `register_date`) VALUES (_name ,_type ,_company ,_quantity ,_cost ,_price  , _expire_date,_user_id ,_register_date);
 
 SELECT 'inserted' AS Message;
 
 ELSEIF _action = 'Update' THEN
 
-UPDATE `medicine_stock` SET `name`=_name,`type`=_type,`company`=_company,`quantity`=_quantity,`cost`=_cost,`price`=_price,`status`=_status,`expire_date`=_expire_date,`user_id`=_user_id,`register_date`=_register_date WHERE `medicine_id`=medicine_id;
+UPDATE `medicine_stock` SET `name`=_name,`type`=_type,`company`=_company,`quantity`=_quantity,`cost`=_cost,`price`=_price,`expire_date`=_expire_date,`user_id`=_user_id,`register_date`=_register_date WHERE `medicine_id`=medicine_id;
 
 SELECT 'updated' AS Message;
 
@@ -274,6 +311,16 @@ END IF;
 
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `purchases_delete_sp` (IN `_id` INT)  BEGIN
+SET @medId = (SELECT `medicine_id` FROM `purchases` WHERE `id` = _id);
+
+DELETE FROM `purchases` WHERE `id` = _id;
+
+ CALL stock_status_update(@medId);
+ 
+SELECT 'success' AS Message;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `purchases_read_sp` (IN `_id` INT)  BEGIN
 
 IF _id = '' THEN
@@ -301,26 +348,26 @@ SELECT 'inserted' AS Message;
 
 ELSEIF _action = 'Update' THEN
 
-UPDATE `purchases` SET `medicine_id`=_medicine_id,`supplier_id`=_supplier_id,`quantity`=_quantity,`cost`=_cost,`price`=_price,`expire_date`=_expire_date,`user_id`=_user_id,`register_date`=__register_date WHERE `id`=_id;
+UPDATE `purchases` SET `medicine_id`=_medicine_id,`supplier_id`=_supplier_id,`quantity`=_quantity,`cost`=_cost,`price`=_price,`expire_date`=_expire_date,`user_id`=_user_id,`register_date`=_register_date WHERE `id`=_id;
 
 SELECT 'updated' AS Message;
 
 
 END IF;
 
+ CALL stock_status_update(_medicine_id);
 
-END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `purchase_delete_sp` (IN `_id` INT)  BEGIN
-
-DELETE FROM `purchases` WHERE `id` = _id;
-
-SELECT 'sussces' AS Message;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sales_delete_sp` (IN `_id` INT)  BEGIN
 
+SET @medId = (SELECT `medicine_id` FROM `sales` WHERE `id` = _id);
+
+
 DELETE FROM `sales` WHERE `id` = _id;
+
+ CALL stock_status_update(@medId);
 
 SELECT 'sussces' AS Message;
 END$$
@@ -352,12 +399,36 @@ SELECT 'inserted' AS Message;
 
 ELSEIF _action = 'Update' THEN
 
-UPDATE `sales` SET `medicine_id`=_medicine_id,`customer_id`=_customer_id,`quantity`=_quantity,`price`=_price,`user_id`=_user_id,`register_date`=__register_date WHERE `id`=_id;
+UPDATE `sales` SET `medicine_id`=_medicine_id,`customer_id`=_customer_id,`quantity`=_quantity,`price`=_price,`user_id`=_user_id,`register_date`=_register_date WHERE `id`=_id;
 
 SELECT 'updated' AS Message;
 
 
 END IF;
+
+ CALL stock_status_update(_medicine_id);
+
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `stock_status_update` (IN `_id` INT)  BEGIN
+
+SET @id = _id;
+SET @qty = (SELECT medicine_stock.quantity FROM `medicine_stock` WHERE `medicine_id` = @id);
+
+IF @qty = 0  THEN
+
+UPDATE medicine_stock SET status = 'Finished' WHERE medicine_stock.medicine_id = @id;
+
+ELSEIF @qty <= 5 THEN
+
+UPDATE medicine_stock SET status = 'Low Stock' WHERE medicine_stock.medicine_id = @id;
+
+ELSE
+
+UPDATE medicine_stock SET status = 'Available' WHERE medicine_stock.medicine_id = @id;
+
+END IF;
+
 
 
 END$$
@@ -367,6 +438,16 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `supplier_delete_sp` (IN `_id` INT) 
 DELETE FROM `suppliers` WHERE `supplier_id` = _id;
 
 SELECT 'success' AS Message;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `supplier_fill_sp` ()  BEGIN
+
+
+
+SELECT supplier_id, suppliers.name, mobile FROM `suppliers`;
+
+
+
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `supplier_read_sp` (IN `_id` INT)  BEGIN
@@ -597,7 +678,7 @@ CREATE TABLE `medicine_stock` (
   `name` varchar(100) NOT NULL,
   `type` varchar(100) NOT NULL,
   `company` varchar(100) NOT NULL,
-  `quantity` int(11) NOT NULL,
+  `quantity` decimal(10,2) NOT NULL,
   `cost` float(10,2) NOT NULL,
   `price` float(10,2) NOT NULL,
   `status` varchar(50) NOT NULL,
@@ -612,7 +693,8 @@ CREATE TABLE `medicine_stock` (
 --
 
 INSERT INTO `medicine_stock` (`medicine_id`, `name`, `type`, `company`, `quantity`, `cost`, `price`, `status`, `expire_date`, `user_id`, `register_date`, `system_date`) VALUES
-(1, 'Parastomal', 'Tablet', 'England', 100, 5.00, 6.00, 'Available', '2024-12-12', 'USR001', '2022-03-13', '2022-03-13 08:06:40');
+(1, 'Parastomal 10MG', 'Tablets', 'Maser', '85.00', 4.00, 5.00, 'Available', '2022-03-30', 'USR001', '2022-03-14', '2022-03-13 08:06:40'),
+(3, 'Anti Pain 10MG', 'Anti Pain', 'Italy', '100.00', 5.00, 6.00, 'Available', '2024-03-30', 'USR001', '2022-03-30', '2022-03-30 07:31:12');
 
 -- --------------------------------------------------------
 
@@ -637,8 +719,13 @@ CREATE TABLE `menus` (
 INSERT INTO `menus` (`menu_id`, `name`, `link`, `module`, `user_id`, `register_date`, `system_date`) VALUES
 (1, 'Dashboard', 'dashboard.php', 'Admin', 'USR001', '2022-03-13', '2022-03-13 07:31:00'),
 (2, 'Employee', 'employee.php', 'Staff', 'USR001', '2022-03-13', '2022-03-13 07:44:12'),
-(4, 'Pharmacy', 'pharmacy.php', 'Medicine', 'USR000', '2022-03-27', '2022-03-27 08:42:37'),
-(5, 'Pharmacy Sales', 'pharmacy_sales.php', 'Medicine', 'USR000', '2022-03-29', '2022-03-27 08:43:03');
+(4, 'Pharmacy Stock', 'stock.php', 'Medicine', 'USR000', '2022-03-27', '2022-03-27 08:42:37'),
+(5, 'Pharmacy Sales', 'stock_sales.php', 'Medicine', 'USR000', '2022-03-29', '2022-03-27 08:43:03'),
+(6, 'Purchase Pharmacy', 'stock_purchase.php', 'Medicine', 'USR000', '2022-03-30', '2022-03-30 09:10:13'),
+(7, 'Customers', 'customer.php', 'Customer', 'USR000', '2022-03-30', '2022-03-30 09:10:43'),
+(8, 'Supplier', 'supplier.php', 'Supplier', 'USR000', '2022-03-30', '2022-03-30 09:11:05'),
+(9, 'Expense', 'expense.php', 'Expense', 'USR000', '2022-03-30', '2022-03-30 09:11:38'),
+(10, 'User', 'user.php', 'User', 'USR000', '2022-03-30', '2022-03-30 09:12:23');
 
 -- --------------------------------------------------------
 
@@ -664,7 +751,8 @@ CREATE TABLE `purchases` (
 --
 
 INSERT INTO `purchases` (`id`, `medicine_id`, `supplier_id`, `quantity`, `cost`, `price`, `expire_date`, `user_id`, `register_date`, `system_date`) VALUES
-(2, 1, 1, 100, 5.00, 6.00, '2024-12-12', 'USR001', '2022-03-19', '2022-03-19 07:57:44');
+(5, 3, 3, 100, 5.00, 6.00, '2024-03-30', 'USR001', '2022-03-30', '2022-03-30 08:14:25'),
+(8, 1, 8, 100, 5.00, 6.00, '2023-03-30', 'USR001', '2022-03-30', '2022-03-30 08:19:51');
 
 --
 -- Triggers `purchases`
@@ -715,6 +803,13 @@ CREATE TABLE `sales` (
   `register_date` date NOT NULL,
   `system_date` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `sales`
+--
+
+INSERT INTO `sales` (`id`, `medicine_id`, `customer_id`, `quantity`, `price`, `user_id`, `register_date`, `system_date`) VALUES
+(4, 1, 3, 15, 6.00, 'USR001', '2022-03-30', '2022-03-30 08:51:57');
 
 --
 -- Triggers `sales`
@@ -821,7 +916,16 @@ INSERT INTO `user_rolls` (`id`, `user_id`, `menu_id`, `register_date`) VALUES
 (2, 'USR001', 2, '2022-03-13'),
 (8, 'USR003', 4, '2022-03-27'),
 (9, 'USR003', 5, '2022-03-27'),
-(10, 'USR003', 2, '2022-03-27');
+(10, 'USR003', 2, '2022-03-27'),
+(11, 'USR002', 1, '2022-03-30'),
+(12, 'USR002', 7, '2022-03-30'),
+(13, 'USR002', 9, '2022-03-30'),
+(14, 'USR002', 4, '2022-03-30'),
+(15, 'USR002', 5, '2022-03-30'),
+(16, 'USR002', 6, '2022-03-30'),
+(17, 'USR002', 2, '2022-03-30'),
+(18, 'USR002', 8, '2022-03-30'),
+(19, 'USR002', 10, '2022-03-30');
 
 --
 -- Indexes for dumped tables
@@ -931,25 +1035,25 @@ ALTER TABLE `expense`
 -- AUTO_INCREMENT for table `medicine_stock`
 --
 ALTER TABLE `medicine_stock`
-  MODIFY `medicine_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `medicine_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `menus`
 --
 ALTER TABLE `menus`
-  MODIFY `menu_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `menu_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `purchases`
 --
 ALTER TABLE `purchases`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `suppliers`
@@ -961,7 +1065,7 @@ ALTER TABLE `suppliers`
 -- AUTO_INCREMENT for table `user_rolls`
 --
 ALTER TABLE `user_rolls`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- Constraints for dumped tables

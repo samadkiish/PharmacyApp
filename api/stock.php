@@ -7,19 +7,19 @@ function insert_update($conn)
 {
     extract($_POST);
 
-    // $userId = $_SESSION['user_id'];
+    $userId = $_SESSION['user_id'];
     $data = [];
 
-    $query = "CALL 	customer_sp('$customer_id','$name','$mobile','$gender','$address','$date','USR001','$action_sp')";
+    $query = "CALL 	medicine_stock_sp('$stock_id','$name','$type','$company','$quantity','$cost','$price','$expire_date','$date','$userId','$action_sp')";
     $result = $conn->query($query);
 
     if ($result) {
         $Message = $result->fetch_assoc();
         $data = array();
         if ($Message['Message'] == 'inserted') {
-            $data = array('status' => true, 'message' => 'New Customer has been saved successfully');
+            $data = array('status' => true, 'message' => 'New Stock has been saved successfully');
         }elseif ($Message['Message'] == 'updated') {
-            $data = array('status' => true, 'message' => 'Customer has been saved successfully');
+            $data = array('status' => true, 'message' => 'Stock has been saved successfully');
         }
     } else {
         $data = array('status' => false, 'message' => $conn->error);
@@ -31,7 +31,7 @@ function insert_update($conn)
 
 function read($conn) {
     extract($_POST);
-    $query = "CALL `customer_read_sp`('$customer_id')";
+    $query = "CALL `medicine_stock_read_sp`('$stock_id')";
     $result = $conn->query($query);
     $result_data = array();
     if ($result) {
@@ -57,14 +57,14 @@ function read($conn) {
 
 function delete($conn) {
     extract($_POST);
-    $query = "CALL `customer_delete_sp`('$customer_id')";
+    $query = "CALL `medicine_stock_delete_sp`('$stock_id')";
     $result = $conn->query($query);
     $result_data = array();
 
     if ($result) {
         $row = $result->fetch_assoc();
         if ($row['Message'] == 'success') {
-            $result_data = array("status" => true, "message" => "Customer has been deleted successfully");
+            $result_data = array("status" => true, "message" => "Stock has been deleted successfully");
         }
     }
     else {
@@ -74,11 +74,10 @@ function delete($conn) {
     echo json_encode($result_data);
 }
 
-
-function fillCustomer($conn){
+function fillMedicine($conn){
     extract($_POST);
     
-    $query = "CALL customer_fill_sp()"; // statement
+    $query = "CALL medicine_stock_fill_sp('$key')"; // statement
     $result = $conn->query($query); // excution
 
     if($result){
@@ -99,6 +98,7 @@ function fillCustomer($conn){
 
     echo json_encode($result_data);
 }
+
 
 
 if (isset($action)) {

@@ -37,7 +37,7 @@ $(document).ready(function () {
                 var message = data.message;
 
                 if (status == true) {
-                        window.location =  'blank.php'
+                        window.location =  'dashboard.php'
 
                         console.log('Success');
                 } else {
