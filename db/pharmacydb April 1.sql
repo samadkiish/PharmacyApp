@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 01, 2022 at 01:58 PM
+-- Generation Time: Apr 01, 2022 at 06:23 PM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 8.1.1
 
@@ -144,7 +144,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `expense_read_sp` (IN `_id` INT)  BE
 
 IF _id = '' THEN
 
-SELECT `id` ID, `type` 'Type', `description` Description, `amount` Amount, u.`register_date` 'Date', u.username 'Username' FROM `expense` e
+SELECT `id` ID, `type` 'Type', `description` Description, `amount` Amount,  e.`register_date` 'Date', u.username 'Username' FROM `expense` e
 LEFT JOIN user u ON u.user_id = e.user_id
 WHERE 1;
 
@@ -367,6 +367,124 @@ END IF;
 
  CALL stock_status_update(_medicine_id);
 
+
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `rpt_customer_sp` (IN `_custom` VARCHAR(20), IN `_from` DATE, IN `_to` DATE, IN `_gender` VARCHAR(20))  BEGIN
+
+IF _custom = 'All' THEN
+	SET @from = '0000-00-00';
+	SET @to = '9999-01-01';
+ELSE
+	SET @from = _from;
+	SET @to = _to;
+END IF;
+
+SELECT `customer_id` ID, `name` 'Customer', `mobile` Mobile,`gender` Gender, `address` Address, `register_date` 'Date' FROM `customers` 
+WHERE `register_date` BETWEEN @from AND @to
+AND `gender` LIKE concat(_gender,'%');
+
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `rpt_employee_sp` (IN `_custom` VARCHAR(20), IN `_from` DATE, IN `_to` DATE, IN `_status` VARCHAR(20), IN `_gender` VARCHAR(20))  BEGIN
+
+IF _custom = 'All' THEN
+	SET @from = '0000-00-00';
+	SET @to = '9999-01-01';
+ELSE
+	SET @from = _from;
+	SET @to = _to;
+END IF;
+
+SELECT `emp_id` ID, `name` Employee, `title` Title, `gender` Gender, `mobile` Mobile, `address` Address, `salary` Salary, `status` 'Status', `register_date` 'Date' FROM `employee`
+WHERE `register_date` BETWEEN @from AND @to
+AND `status` LIKE concat(_status,'%')
+AND `gender` LIKE concat(_gender,'%');
+
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `rpt_expense_sp` (IN `_custom` VARCHAR(20), IN `_from` DATE, IN `_to` DATE)  BEGIN
+
+IF _custom = 'All' THEN
+
+SELECT `id` ID, `type` 'Type', `description` Description, `amount` Amount, e.`register_date` 'Date', u.username 'Username' FROM `expense` e
+LEFT JOIN user u ON u.user_id = e.user_id;
+
+
+ELSE
+
+SELECT `id` ID, `type` 'Type', `description` Description, `amount` Amount, u.`register_date` 'Date', u.username 'Username' FROM `expense` e
+LEFT JOIN user u ON u.user_id = e.user_id WHERE e.register_date BETWEEN _from AND _to;
+
+
+END IF;
+
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `rpt_purchases_sp` (IN `_custom` VARCHAR(20), IN `_from` DATE, IN `_to` DATE)  BEGIN
+
+IF _custom = 'All' THEN
+	SET @from = '0000-00-00';
+	SET @to = '9999-01-01';
+ELSE
+	SET @from = _from;
+	SET @to = _to;
+END IF;
+
+
+SELECT `id` ID, concat(m.name,' ', m.type) 'Medicine', s.name 'Supplier', p.`quantity` QTY, p.`cost` Cost, p.`price` Price, p.`expire_date` 'Expired Date', p.`register_date` 'Date' FROM `purchases` p
+LEFT JOIN suppliers s ON s.supplier_id = p.supplier_id
+LEFT JOIN medicine_stock m ON m.medicine_id = p.medicine_id
+WHERE p.`register_date` BETWEEN @from	 AND @to;
+
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `rpt_sales_sp` (IN `_custom` VARCHAR(20), IN `_from` DATE, IN `_to` DATE)  BEGIN
+
+IF _custom = 'All' THEN
+	SET @from = '0000-00-00';
+	SET @to = '9999-01-01';
+ELSE
+	SET @from = _from;
+	SET @to = _to;
+END IF;
+
+
+SELECT `id` ID, concat(m.name,' ', m.type) 'Medicine', concat(c.name,' ', c.mobile) Customer, s.`quantity` QTY, s.`price` Price, s.`register_date` 'Date' FROM `sales` s
+LEFT JOIN customers c ON c.customer_id = s.customer_id
+LEFT JOIN medicine_stock m ON m.medicine_id = s.medicine_id 
+WHERE s.`register_date` BETWEEN @from	 AND @to;
+
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `rpt_stock_sp` (IN `_custom` VARCHAR(20), IN `_from` DATE, IN `_to` DATE, IN `_status` VARCHAR(50))  BEGIN
+
+IF _custom = 'All' THEN
+	SET @from = '0000-00-00';
+	SET @to = '9999-01-01';
+ELSE
+	SET @from = _from;
+	SET @to = _to;
+END IF;
+
+SELECT `medicine_id` ID, `name` 'Name', `type` 'Type', `company` Company, `quantity` QTY, `cost` Cost, `price` Price, `status` 'Status', `expire_date` 'Expire Date', `register_date` 'Date' FROM `medicine_stock` 
+WHERE `register_date` BETWEEN @from	 AND @to
+AND `status` LIKE concat(_status,'%');
+
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `rpt_suppliers_sp` (IN `_custom` VARCHAR(20), IN `_from` DATE, IN `_to` DATE)  BEGIN
+
+IF _custom = 'All' THEN
+	SET @from = '0000-00-00';
+	SET @to = '9999-01-01';
+ELSE
+	SET @from = _from;
+	SET @to = _to;
+END IF;
+
+SELECT `supplier_id` ID, `name` 'Supplier', `mobile` Mobile, `address` Address, `register_date` 'Date' FROM `suppliers` 
+WHERE `register_date` BETWEEN @from AND @to;
 
 END$$
 
@@ -735,7 +853,8 @@ INSERT INTO `menus` (`menu_id`, `name`, `link`, `module`, `user_id`, `register_d
 (7, 'Customers', 'customer.php', 'Customer', 'USR000', '2022-03-30', '2022-03-30 09:10:43'),
 (8, 'Supplier', 'supplier.php', 'Supplier', 'USR000', '2022-03-30', '2022-03-30 09:11:05'),
 (9, 'Expense', 'expense.php', 'Expense', 'USR000', '2022-03-30', '2022-03-30 09:11:38'),
-(10, 'User', 'user.php', 'User', 'USR000', '2022-03-30', '2022-03-30 09:12:23');
+(10, 'User', 'user.php', 'User', 'USR000', '2022-03-30', '2022-03-30 09:12:23'),
+(11, 'Stock Report', 'stock_rpt.php', 'Reports', 'USR000', '2022-04-01', '2022-04-01 16:22:35');
 
 -- --------------------------------------------------------
 
@@ -933,15 +1052,16 @@ INSERT INTO `user_rolls` (`id`, `user_id`, `menu_id`, `register_date`) VALUES
 (8, 'USR003', 4, '2022-03-27'),
 (9, 'USR003', 5, '2022-03-27'),
 (10, 'USR003', 2, '2022-03-27'),
-(11, 'USR002', 1, '2022-03-30'),
-(12, 'USR002', 7, '2022-03-30'),
-(13, 'USR002', 9, '2022-03-30'),
-(14, 'USR002', 4, '2022-03-30'),
-(15, 'USR002', 5, '2022-03-30'),
-(16, 'USR002', 6, '2022-03-30'),
-(17, 'USR002', 2, '2022-03-30'),
-(18, 'USR002', 8, '2022-03-30'),
-(19, 'USR002', 10, '2022-03-30');
+(20, 'USR002', 1, '2022-04-01'),
+(21, 'USR002', 7, '2022-04-01'),
+(22, 'USR002', 9, '2022-04-01'),
+(23, 'USR002', 4, '2022-04-01'),
+(24, 'USR002', 5, '2022-04-01'),
+(25, 'USR002', 6, '2022-04-01'),
+(26, 'USR002', 11, '2022-04-01'),
+(27, 'USR002', 2, '2022-04-01'),
+(28, 'USR002', 8, '2022-04-01'),
+(29, 'USR002', 10, '2022-04-01');
 
 --
 -- Indexes for dumped tables
@@ -1045,7 +1165,7 @@ ALTER TABLE `employee`
 -- AUTO_INCREMENT for table `expense`
 --
 ALTER TABLE `expense`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `medicine_stock`
@@ -1057,7 +1177,7 @@ ALTER TABLE `medicine_stock`
 -- AUTO_INCREMENT for table `menus`
 --
 ALTER TABLE `menus`
-  MODIFY `menu_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `menu_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `purchases`
@@ -1081,7 +1201,7 @@ ALTER TABLE `suppliers`
 -- AUTO_INCREMENT for table `user_rolls`
 --
 ALTER TABLE `user_rolls`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- Constraints for dumped tables
