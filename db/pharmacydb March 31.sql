@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 01, 2022 at 09:09 AM
+-- Generation Time: Apr 01, 2022 at 01:58 PM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 8.1.1
 
@@ -83,13 +83,7 @@ SELECT DAYNAME(`register_date`) Day, SUM(`quantity`*`price`) amount FROM `sales`
 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `employee_fill_sp` ()  BEGIN
-
-SELECT `emp_id`, `name`, `title` FROM `employee` WHERE `status` = 'Active';
-
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `emplyee_delete_sp` (IN `_emp_id` INT)  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `employee_delete_sp` (IN `_emp_id` INT)  BEGIN
 
 
 DELETE FROM `employee` WHERE `emp_id` = _emp_id;
@@ -97,7 +91,13 @@ DELETE FROM `employee` WHERE `emp_id` = _emp_id;
 SELECT 'success' AS Message;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `emplyee_read_sp` (IN `_emp_id` INT)  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `employee_fill_sp` ()  BEGIN
+
+SELECT `emp_id`, `name`, `title` FROM `employee` WHERE `status` = 'Active';
+
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `employee_read_sp` (IN `_emp_id` INT)  BEGIN
 
 IF _emp_id = '' THEN
 
@@ -113,7 +113,7 @@ END IF;
 
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `emplyee_sp` (IN `_emp_id` INT, IN `_name` VARCHAR(100) CHARSET utf8, IN `_title` VARCHAR(50), IN `_gender` VARCHAR(20), IN `_mobile` INT, IN `_address` VARCHAR(100), IN `_salary` FLOAT(10,2), IN `_status` VARCHAR(50), IN `_register_date` DATE, IN `_action` VARCHAR(20))  BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `employee_sp` (IN `_emp_id` INT, IN `_name` VARCHAR(100) CHARSET utf8, IN `_title` VARCHAR(50), IN `_gender` VARCHAR(20), IN `_mobile` INT, IN `_address` VARCHAR(100), IN `_salary` FLOAT(10,2), IN `_status` VARCHAR(50), IN `_register_date` DATE, IN `_action` VARCHAR(20))  BEGIN
 
 IF _action = 'Insert' THEN
 
@@ -652,7 +652,7 @@ CREATE TABLE `employee` (
 
 INSERT INTO `employee` (`emp_id`, `name`, `title`, `gender`, `mobile`, `address`, `salary`, `status`, `register_date`, `system_date`) VALUES
 (2, 'Mohamed Ahmed Ali', 'Manager', 'Male', 612324336, 'Derkenley', 1000.00, 'Active', '2022-03-12', '2022-03-12 08:40:26'),
-(4, 'Ibrahim Ali', 'Pharmacy', 'Male', 612324234, 'Hodan', 1000.00, 'Active', '2022-03-12', '2022-03-12 08:40:26');
+(4, 'Muno Abdi', 'director', 'Female', 612324234, 'Yaqshiid', 1400.00, 'InActive', '2022-03-11', '2022-03-12 08:40:26');
 
 -- --------------------------------------------------------
 
@@ -1039,7 +1039,7 @@ ALTER TABLE `customers`
 -- AUTO_INCREMENT for table `employee`
 --
 ALTER TABLE `employee`
-  MODIFY `emp_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `emp_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `expense`
