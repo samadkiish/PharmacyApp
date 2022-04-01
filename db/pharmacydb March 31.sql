@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 31, 2022 at 07:05 AM
+-- Generation Time: Apr 01, 2022 at 09:09 AM
 -- Server version: 10.4.22-MariaDB
 -- PHP Version: 8.1.1
 
@@ -71,6 +71,16 @@ UPDATE `customers` SET `name`=_name,`mobile`=_mobile,`gender`=_gender,`address`=
 SELECT 'updated' AS Message;
 
 END IF;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `daily_sales_chart` ()  BEGIN
+
+
+SET @from = DATE_SUB(curdate(), INTERVAL 7 DAY);
+SET @to = curdate();
+
+SELECT DAYNAME(`register_date`) Day, SUM(`quantity`*`price`) amount FROM `sales` WHERE `register_date` BETWEEN @from AND @to GROUP BY `register_date`;
+
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `employee_fill_sp` ()  BEGIN
@@ -172,8 +182,8 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `get_daily_statis_sp` ()  BEGIN
 SET @customers = (SELECT COUNT(*) FROM `customers`);
 SET @suppliers = (SELECT COUNT(*) FROM `suppliers`);
 SET @onStock = (SELECT SUM(`quantity`) FROM `medicine_stock`);
-SET @income = (SELECT SUM(`quantity`) FROM `sales`);
-SET @cost = (SELECT SUM(`cost`) FROM `purchases`);
+SET @income = (SELECT SUM(`quantity`*`price`) FROM `sales`);
+SET @cost = (SELECT SUM(`cost`*`quantity`) FROM `purchases`);
 SET @expense = (SELECT SUM(`amount`) FROM `expense`);
 
 SELECT @customers customers, @suppliers suppliers, @onStock onStock, @income income,@cost cost, @expense expense;
@@ -693,7 +703,7 @@ CREATE TABLE `medicine_stock` (
 --
 
 INSERT INTO `medicine_stock` (`medicine_id`, `name`, `type`, `company`, `quantity`, `cost`, `price`, `status`, `expire_date`, `user_id`, `register_date`, `system_date`) VALUES
-(1, 'Parastomal 10MG', 'Tablets', 'Maser', '85.00', 4.00, 5.00, 'Available', '2022-03-30', 'USR001', '2022-03-14', '2022-03-13 08:06:40'),
+(1, 'Parastomal 10MG', 'Tablets', 'Maser', '58.00', 4.00, 5.00, 'Available', '2022-03-30', 'USR001', '2022-03-14', '2022-03-13 08:06:40'),
 (3, 'Anti Pain 10MG', 'Anti Pain', 'Italy', '100.00', 5.00, 6.00, 'Available', '2024-03-30', 'USR001', '2022-03-30', '2022-03-30 07:31:12');
 
 -- --------------------------------------------------------
@@ -809,7 +819,13 @@ CREATE TABLE `sales` (
 --
 
 INSERT INTO `sales` (`id`, `medicine_id`, `customer_id`, `quantity`, `price`, `user_id`, `register_date`, `system_date`) VALUES
-(4, 1, 3, 15, 6.00, 'USR001', '2022-03-30', '2022-03-30 08:51:57');
+(4, 1, 3, 15, 6.00, 'USR001', '2022-03-30', '2022-03-30 08:51:57'),
+(5, 1, 3, 1, 6.00, 'USR001', '2022-03-29', '2022-03-30 08:51:57'),
+(6, 1, 3, 3, 6.00, 'USR001', '2022-03-28', '2022-03-30 08:51:57'),
+(7, 1, 3, 4, 6.00, 'USR001', '2022-03-27', '2022-03-30 08:51:57'),
+(8, 1, 3, 5, 6.00, 'USR001', '2022-03-26', '2022-03-30 08:51:57'),
+(9, 1, 3, 6, 6.00, 'USR001', '2022-03-25', '2022-03-30 08:51:57'),
+(10, 1, 3, 8, 6.00, 'USR001', '2022-03-24', '2022-03-30 08:51:57');
 
 --
 -- Triggers `sales`
@@ -1053,7 +1069,7 @@ ALTER TABLE `purchases`
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `suppliers`
