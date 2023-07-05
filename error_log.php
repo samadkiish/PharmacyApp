@@ -1,5 +1,5 @@
 <?php
-
+echo "Hello World";
 function checkForErrors() {
     $lastError = error_get_last();
 
